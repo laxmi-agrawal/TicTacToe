@@ -8,9 +8,6 @@ public class TicTacToeServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(1024), 0);
         HttpContext context = server.createContext("/");
         context.setHandler(Handlers::handleRequestIndex);
-
-        HttpContext context1 = server.createContext("/welcome");
-        context1.setHandler(Handlers::handleRequestWelcome);
         server.start();
     }
 }
