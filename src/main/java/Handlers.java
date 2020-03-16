@@ -51,14 +51,11 @@ public class Handlers {
 
         if(exchange.getRequestURI().getQuery() != null && !exchange.getRequestURI().getQuery().isEmpty()) {
             Map<String, String> queryMap = queryParser(exchange.getRequestURI().getQuery());
-
-            if(!gameState.update(queryMap.get("value").charAt(0), Integer.parseInt(queryMap.get("position")))) {
-                header = "Invalid Input \n";
-            }
+            header = gameState.update(queryMap.get("value").charAt(0), Integer.parseInt(queryMap.get("position")));
         }
 
         String response = getHTML("<p>Play Game</p>" + "<pre>\n" +
-                header + gameState.toString()+
+                header + "\n" + gameState.toString()+
                 "</pre>" +
                 form);
         exchange.sendResponseHeaders(200, response.getBytes().length);//response code and length
