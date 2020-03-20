@@ -1,11 +1,16 @@
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class Handlers {
+    private static String SESSION_ID = "sessionid";
+    private static Map<Integer,GameState> sessionState = new HashMap<>();
     private static String form = "<form method = \"get\" action = \"/\">" +
             "<label for=\"position\">Choose a position:</label>"+
             "<select id=\"position\" name=\"position\">"+
@@ -46,7 +51,27 @@ public class Handlers {
         return html;
     }
 
+    public static int getSessionId(HttpExchange exchange) {
+        List<String> cookies = exchange.getRequestHeaders().get("Cookie");
+        if(null != cookies){
+            for(String cookie : cookies) {
+                String[] split = cookie.split("=");
+                if(split[0].equals(Handlers.SESSION_ID)){
+                    return Integer.parseInt(split[1]);
+                }
+            }
+        }
+        Random random = new Random();
+        return random.nextInt();
+    }
+
     public static void handleRequestIndex(HttpExchange exchange) throws IOException {
+        int sessionId = getSessionId(exchange);
+        if(!sessionState.containsKey(sessionId)){
+            sessionState.put(sessionId, new GameState());
+        }
+        GameState gameState = sessionState.get(sessionId);
+
         String header = "";
 
         if(exchange.getRequestURI().getQuery() != null && !exchange.getRequestURI().getQuery().isEmpty()) {
@@ -58,6 +83,8 @@ public class Handlers {
                 header + "\n" + gameState.toString()+
                 "</pre>" +
                 form);
+        Headers responseHeaders = exchange.getResponseHeaders();
+        responseHeaders.set("Set-Cookie", String.format("%s=%s; path=/",Handlers.SESSION_ID, sessionId));
         exchange.sendResponseHeaders(200, response.getBytes().length);//response code and length
         OutputStream os = exchange.getResponseBody();
         os.write(response.getBytes());
